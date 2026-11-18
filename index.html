@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gestion Loyer - V3</title>
+<style>
+*{box-sizing:border-box;font-family:Arial,sans-serif}
+body{margin:0;background:#f1f5f9;padding:12px;padding-bottom:90px}
+.header{background:#0f766e;color:white;padding:16px;border-radius:14px;text-align:center}
+.header h1{margin:0;font-size:22px}
+.header p{margin:4px 0 0;opacity:.9;font-size:13px}
+.nav{display:flex;gap:6px;margin:12px 0;flex-wrap:wrap}
+.nav button{flex:1;border:0;padding:11px 6px;border-radius:10px;background:white;font-weight:bold;cursor:pointer;font-size:13px}
+.nav button.active{background:#0f766e;color:white}
+.card{background:white;padding:14px;border-radius:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+input,select{width:100%;padding:12px;margin:6px 0;border:1px solid #ddd;border-radius:10px;font-size:15px}
+.btn{width:100%;padding:13px;border:0;border-radius:10px;font-weight:bold;cursor:pointer;font-size:15px}
+.btn-green{background:#16a34a;color:white}
+.btn-dark{background:#0f766e;color:white}
+.btn-wave{background:#1dc7d2;color:white}
+.btn-whatsapp{background:#25D366;color:white}
+.btn-red{background:#dc2626;color:white}
+.badge{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:bold}
+.payé{background:#dcfce7;color:#166534}
+.impayé{background:#fee2e2;color:#991b1b}
+.loc{border-bottom:1px solid #eee;padding:10px 0}
+.loc:last-child{border:0}
+.small{font-size:12px;color:#64748b}
+.recu{border:2px dashed #0f766e;padding:14px;border-radius:12px;text-align:center}
+.hidden{display:none}
+</style>
+</head>
+<body>
+
+<div class="header">
+<h1 id="hBatiment">🏠 MON BÂTIMENT</h1>
+<p id="hProprio">Configurez dans Paramètres</p>
+<p id="hTel">Téléphone : -</p>
+</div>
+
+<div class="nav">
+<button onclick="show('locataires')" id="b-locataires" class="active">🏠 Locataires</button>
+<button onclick="show('paiement')" id="b-paiement">💰 Paiement</button>
+<button onclick="show('bilan')" id="b-bilan">📊 Bilan</button>
+<button onclick="show('params')" id="b-params">⚙️ Paramètres</button>
+</div>
+
+<div id="locataires" class="card">
+<h3>➕ Ajouter un locataire</h3>
+<input id="nom" placeholder="Nom du locataire">
+<input id="logement" placeholder="Logement - Ex: Chambre 2">
+<input id="loyer" type="number" placeholder="Loyer / mois - Ex: 15000">
+<input id="telLoc" placeholder="Téléphone locataire">
+<button class="btn btn-dark" onclick="ajouterLocataire()">Ajouter le locataire</button>
+<h3 style="margin-top:20px">📋 Mes locataires</h3>
+<div id="liste"></div>
+</div>
+
+<div id="paiement" class="card hidden">
+<h3>💰 Enregistrer un paiement</h3>
+<select id="choixLoc"></select>
+<input id="montant" type="number" placeholder="Montant - Ex: 15000">
+<select id="mois">
+<option>Janvier 2026</option><option>Février 2026</option><option>Mars 2026</option><option>Avril 2026</option><option>Mai 2026</option><option>Juin 2026</option><option>Juillet 2026</option><option>Août 2026</option><option>Septembre 2026</option><option>Octobre 2026</option><option>Novembre 2026</option><option>Décembre 2026</option>
+</select>
+<select id="moyen"><option>Espèces</option><option>Wave</option><option>Orange Money</option><option>MTN MoMo</option></select>
+<button class="btn btn-green" onclick="payer()">✅ Enregistrer le paiement</button>
+
+<div style="margin-top:14px;background:#ecfeff;padding:12px;border-radius:12px">
+<b>💙 Payer avec Wave</b><br>
+<span class="small">Le locataire envoie sur le numéro Wave du propriétaire :</span>
+<div id="waveAffiche" style="font-size:20px;font-weight:bold;margin:6px 0">Non configuré - Allez dans Paramètres</div>
+<button class="btn btn-wave" onclick="ouvrirWave()">Ouvrir Wave pour payer</button>
+</div>
+<div id="recuZone"></div>
+</div>
+
+<div id="bilan" class="card hidden">
+<h3>📊 Bilan</h3>
+<p>Total encaissé ce mois : <b id="total">0 FCFA</b></p>
+<p>Nombre de locataires : <b id="nbLoc">0</b></p>
+<p>Nombre de paiements : <b id="nbPay">0</b></p>
+<div id="listePay"></div>
+</div>
+
+<div id="params" class="card hidden">
+<h3>⚙️ Paramètres - Mon Bâtiment</h3>
+<p class="small">C'est ICI que le client met SES infos. Tout est vide au départ.</p>
+<input id="pNom" placeholder="Votre nom">
+<input id="pBat" placeholder="Nom de votre bâtiment">
+<input id="pTel" placeholder="Votre téléphone">
+<input id="pWave" placeholder="Votre numéro Wave pour recevoir">
+<input id="pVille" placeholder="Votre ville - Ex: Bingerville">
+<button class="btn btn-dark" onclick="sauverParams()">💾 Enregistrer mes infos</button>
+<p id="msgParams" style="color:green;font-weight:bold"></p>
+<hr>
+<h3 style="color:#dc2626">⚠️ Zone Vendeur</h3>
+<p class="small">Cliquez ici avant de vendre à un nouveau client. Ça efface TOUT et remet à zéro.</p>
+<button class="btn btn-red" onclick="effacerTout()">🗑️ Effacer tout - Remettre à zéro pour vente</button>
+</div>
+
+<script>
+let locataires = JSON.parse(localStorage.getItem('locataires_v3')||'[]');
+let paiements = JSON.parse(localStorage.getItem('paiements_v3')||'[]');
+let params = JSON.parse(localStorage.getItem('params_v3')||'{}');
+
+function show(id){
+['locataires','paiement','bilan','params'].forEach(x=>{
+document.getElementById(x).classList.toggle('hidden', x!==id);
+document.getElementById('b-'+x).classList.toggle('active', x===id);
+});
+afficher();
+}
+function sauverParams(){
+params={nom:document.getElementById('pNom').value, bat:document.getElementById('pBat').value, tel:document.getElementById('pTel').value, wave:document.getElementById('pWave').value, ville:document.getElementById('pVille').value};
+localStorage.setItem('params_v3',JSON.stringify(params));
+document.getElementById('msgParams').innerText='✅ Enregistré !';
+afficher();
+}
+function effacerTout(){
+if(confirm('Effacer TOUT et remettre à zéro pour un nouveau client ?')){
+localStorage.removeItem('locataires_v3');
+localStorage.removeItem('paiements_v3');
+localStorage.removeItem('params_v3');
+localStorage.removeItem('locataires');
+localStorage.removeItem('paiements');
+localStorage.removeItem('params');
+location.reload();
+}
+}
+function ajouterLocataire(){
+let n=document.getElementById('nom').value, l=document.getElementById('logement').value, lo=document.getElementById('loyer').value, t=document.getElementById('telLoc').value;
+if(!n||!lo){alert('Mettez au moins le nom et le loyer');return;}
+locataires.push({nom:n,logement:l,loyer:lo,tel:t});
+localStorage.setItem('locataires_v3',JSON.stringify(locataires));
+document.getElementById('nom').value='';document.getElementById('logement').value='';document.getElementById('loyer').value='';document.getElementById('telLoc').value='';
+afficher();
+}
+function payer(){
+let idx=document.getElementById('choixLoc').value;
+if(idx===''||!locataires[idx]){alert('Ajoutez d’abord un locataire');return;}
+let loc=locataires[idx];
+let m=document.getElementById('montant').value||loc.loyer;
+let mois=document.getElementById('mois').value;
+let moyen=document.getElementById('moyen').value;
+let num='REC-'+String(paiements.length+1).padStart(4,'0');
+let p={loc:loc.nom,logement:loc.logement,montant:m,mois:mois,moyen:moyen,num:num,date:new Date().toLocaleDateString('fr-FR'),telLoc:loc.tel};
+paiements.push(p);
+localStorage.setItem('paiements_v3',JSON.stringify(paiements));
+let bat=params.bat||'MON BÂTIMENT';
+let proprio=params.nom||'Propriétaire';
+let tel=params.tel||'-';
+document.getElementById('recuZone').innerHTML=`<div class="recu" style="margin-top:16px"><h3>🧾 REÇU DE LOYER - ${bat}</h3><p><b>Reçu N°:</b> ${num}</p><p><b>Reçu de:</b> ${p.loc}</p><p><b>Logement:</b> ${p.logement}</p><p><b>Mois:</b> ${mois}</p><p><b>Montant:</b> ${m} FCFA</p><p><b>Moyen:</b> ${moyen}</p><p><b>Date:</b> ${p.date}</p><p class="small">${proprio} - ${tel} - ${params.ville||''}</p><button class="btn btn-whatsapp" onclick="envoyerWhats('${p.loc}','${m}','${mois}','${num}')">📲 Envoyer reçu sur WhatsApp</button></div>`;
+afficher();
+}
+function envoyerWhats(nom,montant,mois,num){
+let bat=params.bat||'MON BÂTIMENT';
+let txt=`Bonjour ${nom}, voici votre reçu de loyer.\n\nREÇU ${num} - ${bat}\nMois: ${mois}\nMontant: ${montant} FCFA\nMerci pour votre paiement.`;
+window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank');
+}
+function ouvrirWave(){
+if(!params.wave){alert('Allez d’abord dans Paramètres pour mettre votre numéro Wave');show('params');return;}
+alert('Demandez au locataire d’envoyer sur Wave au : '+params.wave);
+}
+function afficher(){
+document.getElementById('hBatiment').innerText='🏠 '+(params.bat?params.bat.toUpperCase():'MON BÂTIMENT');
+document.getElementById('hProprio').innerText=params.nom||'Configurez dans Paramètres';
+document.getElementById('hTel').innerText='Téléphone : '+(params.tel||'-');
+document.getElementById('waveAffiche').innerText=params.wave||'Non configuré - Allez dans Paramètres';
+document.getElementById('pNom').value=params.nom||'';
+document.getElementById('pBat').value=params.bat||'';
+document.getElementById('pTel').value=params.tel||'';
+document.getElementById('pWave').value=params.wave||'';
+document.getElementById('pVille').value=params.ville||'';
+let liste=document.getElementById('liste');
+liste.innerHTML=locataires.length? '':'<p class="small">Aucun locataire pour le moment.</p>';
+locataires.forEach((l,i)=>{
+let paye=paiements.some(p=>p.loc===l.nom);
+liste.innerHTML+=`<div class="loc"><b>${l.nom}</b> <span class="badge ${paye?'payé':'impayé'}">${paye?'Payé':'Impayé'}</span><br><span class="small">${l.logement} • ${l.loyer} FCFA / mois • ${l.tel||''}</span><br><button onclick="supprimerLoc(${i})" style="margin-top:6px;border:0;background:#fee2e2;padding:6px 10px;border-radius:8px">🗑️ Supprimer</button></div>`;
+});
+let choix=document.getElementById('choixLoc');
+choix.innerHTML=locataires.map((l,i)=>`<option value="${i}">${l.nom} - ${l.loyer} FCFA</option>`).join('');
+let total=paiements.reduce((s,p)=>s+Number(p.montant||0),0);
+document.getElementById('total').innerText=total.toLocaleString('fr-FR')+' FCFA';
+document.getElementById('nbLoc').innerText=locataires.length;
+document.getElementById('nbPay').innerText=paiements.length;
+document.getElementById('listePay').innerHTML=paiements.map(p=>`<p>✅ ${p.loc} - ${p.montant} FCFA - ${p.mois} - ${p.moyen} (${p.num})</p>`).join('');
+}
+function supprimerLoc(i){if(confirm('Supprimer ce locataire ?')){locataires.splice(i,1);localStorage.setItem('locataires_v3',JSON.stringify(locataires));afficher();}}
+afficher();
+</script>
+</body>
+</html>
